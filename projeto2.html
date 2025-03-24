@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variação da Chuva Acumulada (2014-2023)</title>
+  <!-- Carrega o ECharts via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    #main {
+      width: 800px;
+      height: 500px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Variação da Chuva Acumulada na Fazenda Carnaúba (2014-2023)</h2>
+  <div id="main"></div>
+
+  <script>
+    // Dados CSV incorporados (incluindo 2013 para base de comparação)
+    const csvData = `ano,total_chuva_mm,dias_chuva_mais_5mm,dias_chuva_mais_10mm
+2013,280.0,14,9
+2014,404.6,18,15
+2015,386.7,16,9
+2016,295,17,10
+2017,211.5,11,5
+2018,764.8,28,21
+2019,497.9,25,16
+2020,591.3,19,11
+2021,388.5,19,11
+2022,938.6,37,24
+2023,376.6,15,13`;
+
+    // Função para converter CSV em um array de objetos
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split("\n");
+      const headers = lines[0].split(",").map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(",").map(v => v.trim());
+        let obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = values[index];
+        });
+        return obj;
+      });
+    }
+
+    // Processa os dados
+    const data = parseCSV(csvData);
+
+    // Calcula a variação da chuva acumulada (diferença em relação ao ano anterior)
+    // Considere somente anos de 2014 a 2023
+    let anos = [];
+    let variacoes = [];
+    for (let i = 1; i < data.length; i++) { // Inicia em 1 pois o índice 0 é 2013
+      const anoAtual = data[i].ano;
+      const chuvaAtual = parseFloat(data[i].total_chuva_mm);
+      const chuvaAnterior = parseFloat(data[i - 1].total_chuva_mm);
+      const diff = chuvaAtual - chuvaAnterior;
+      anos.push(anoAtual);
+      variacoes.push(diff);
+    }
+
+    // Inicializa o gráfico
+    var chartDom = document.getElementById('main');
+    var myChart = echarts.init(chartDom);
+    var option = {
+      title: {
+        text: 'Variação da Chuva Acumulada (mm)',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          const { name, value } = params[0];
+          return `Ano: ${name}<br/>Variação: ${value} mm`;
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: anos,
+        name: 'Ano'
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Variação (mm)'
+      },
+      series: [
+        {
+          name: 'Variação (mm)',
+          type: 'bar',
+          data: variacoes,
+          // Altera a cor das barras conforme valor positivo ou negativo
+          itemStyle: {
+            color: function(params) {
+              return params.value >= 0 ? '#2ecc71' : '#e74c3c';
+            }
+          }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+  </script>
+</body>
+</html>
